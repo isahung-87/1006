@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>辦公用具團購採購統計試算表</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      body {
+        background: white !important;
+        padding: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen p-3 sm:p-6 lg:p-8">
+
+  <div class="max-w-7xl mx-auto space-y-6">
+    <!-- Header Card -->
+    <header class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 transition-all">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold mb-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            辦公室用品採購專案
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+            辦公用品統計與採購試算表
+          </h1>
+          <p class="text-sm text-slate-500 mt-1">
+            依據清單匯入 8 項文具用品，支援多人數量登記、自動加總、一鍵複製至 Google 試算表及下載 CSV。
+          </p>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="flex flex-wrap items-center gap-2 no-print">
+          <button id="btnCopySheet" onclick="copyForGoogleSheets()" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-sm transition-all hover:shadow focus:outline-none">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+            </svg>
+            複製到 Google 試算表
+          </button>
+
+          <button onclick="exportCSV()" class="inline-flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-3.5 py-2.5 rounded-xl font-medium text-sm shadow-sm transition-all focus:outline-none">
+            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+            </svg>
+            匯出 CSV
+          </button>
+
+          <button onclick="window.print()" class="inline-flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-3.5 py-2.5 rounded-xl font-medium text-sm shadow-sm transition-all focus:outline-none">
+            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+            </svg>
+            列印 / PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- Overview Statistics Badges -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-5 border-t border-slate-100">
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/70">
+          <p class="text-xs text-slate-500 font-medium">品項種類</p>
+          <p class="text-xl font-bold text-slate-900 mt-1" id="statItemCount">8 項</p>
+        </div>
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/70">
+          <p class="text-xs text-slate-500 font-medium">登記參與人數</p>
+          <p class="text-xl font-bold text-slate-900 mt-1" id="statPeopleCount">0 人</p>
+        </div>
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/70">
+          <p class="text-xs text-slate-500 font-medium">預定需求總件數</p>
+          <p class="text-xl font-bold text-indigo-600 mt-1" id="statTotalQuantity">0 件</p>
+        </div>
+        <div class="bg-emerald-50 p-3.5 rounded-xl border border-emerald-200/70">
+          <p class="text-xs text-emerald-700 font-medium">預估採購總金額</p>
+          <p class="text-xl font-bold text-emerald-700 mt-1" id="statTotalAmount">NT$ 0</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Spreadsheet Grid Section -->
+    <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <!-- Table Top Controls -->
+      <div class="p-4 sm:p-5 border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-50/50">
+        <div class="flex items-center gap-3">
+          <span class="p-2 bg-emerald-100 text-emerald-800 rounded-lg">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+          </span>
+          <div>
+            <h2 class="text-base font-bold text-slate-800">登記矩陣試算表 (即時計算)</h2>
+            <p class="text-xs text-slate-500">每列為一位同事，點選 +/- 或直接填入數字，即時彙總總金額</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 w-full sm:w-auto no-print">
+          <div class="flex items-center gap-1.5 w-full sm:w-auto">
+            <input type="text" id="newPersonName" placeholder="輸入同事姓名/單位" 
+              class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm w-full sm:w-44 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              onkeydown="if(event.key === 'Enter') addPerson()">
+            <button onclick="addPerson()" class="bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors">
+              + 新增人員
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Grid Table -->
+      <div class="overflow-x-auto custom-scrollbar">
+        <table class="w-full text-left border-collapse min-w-[980px]" id="matrixTable">
+          <thead>
+            <tr class="bg-slate-100 text-slate-700 text-xs font-semibold border-b border-slate-200">
+              <th class="p-3 w-12 text-center sticky left-0 bg-slate-100 z-10">序號</th>
+              <th class="p-3 w-36 sticky left-12 bg-slate-100 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.03)]">人員名稱</th>
+              <!-- Item Columns Header generated dynamically -->
+              <th class="p-2 text-center border-l border-slate-200" title="樹德桌上型資料櫃 DD-1214">
+                <div class="font-bold text-slate-900 truncate max-w-[140px] mx-auto">1. 樹德資料櫃</div>
+                <div class="text-[11px] text-emerald-600 font-semibold">$890/個</div>
+              </th>
+              <th class="p-2 text-center border-l border-slate-200" title="佳斯捷系列 君展歌德雜誌架">
+                <div class="font-bold text-slate-900 truncate max-w-[140px] mx-auto">2. 歌德雜誌架</div>
+                <div class="text-[11px] text-emerald-600 font-semibold">$140/個</div>
+              </th>
+              <th class="p-2 text-center border-l border-slate-200" title="佳斯捷系列 君展黑珍珠雜誌架 8139">
+                <div class="font-bold text-slate-900 truncate max-w-[140px] mx-auto">3. 黑珍珠雜誌架</div>
+                <div class="text-[11px] text-emerald-600 font-semibold">$105/個</div>
+              </th>
+              <th class="p-2 text-center border-l border-slate-200" title="莫蘭迪色A4板夾10入">
+                <div class="font-bold text-slate-900 truncate max-w-[140px] mx-auto">4. 莫蘭迪板夾(10入)</div>
+                <div class="text-[11px] text-emerald-600 font-semibold">$350/組</div>
+              </th>
+              <th class="p-2 text-center border-l border-slate-200" title="L型標示架(直)A4 47401">
+                <div class="font-bold text-slate-900 truncate max-w-[140px] mx-auto">5. L型標示架A4</div>
+                <div class="text-[11px] text-emerald-600 font-semibold">$150/個</div>
+              </th>
+              <th class="p-2 text-center border-l border-slate-200" title="伸縮學習指揮棒">
+                <div class="font-bold text-slate-900 truncate max-w-[140px] mx-auto">6. 伸縮指揮棒</div>
+                <div class="text-[11px] text-emerald-600 font-semibold">$30/支</div>
+              </th>
+              <th class="p-2 text-center border-l border-slate-200" title="MBS A3 亮面護貝膠膜 100張">
+                <div class="font-bold text-slate-900 truncate max-w-[140px] mx-auto">7. A3護貝膜(100張)</div>
+                <div class="text-[11px] text-emerald-600 font-semibold">$646/盒</div>
+              </th>
+              <th class="p-2 text-center border-l border-slate-200" title="MBS A4 亮面護貝膠膜 100張x3盒">
+                <div class="font-bold text-slate-900 truncate max-w-[140px] mx-auto">8. A4護貝膜(3盒組)</div>
+                <div class="text-[11px] text-emerald-600 font-semibold">$636/組</div>
+              </th>
+              <th class="p-3 w-24 text-center border-l border-slate-300 bg-slate-100 font-bold">個人件數</th>
+              <th class="p-3 w-28 text-right border-l border-slate-300 bg-slate-100 font-bold text-emerald-700">個人小計</th>
+              <th class="p-3 w-16 text-center border-l border-slate-200 no-print">操作</th>
+            </tr>
+          </thead>
+          <tbody id="matrixBody" class="divide-y divide-slate-100 text-sm">
+            <!-- Dynamic participant rows inserted by JavaScript -->
+          </tbody>
+          <tfoot id="matrixFoot" class="bg-slate-50/90 font-semibold text-slate-800 border-t-2 border-slate-300">
+            <!-- Dynamic footer inserted by JavaScript -->
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- Detailed Items & Procurement Checklist -->
+    <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-slate-200 gap-2">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span>採購品項清單與規格連結</span>
+            <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-normal">8 樣品項核對</span>
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">點擊外部連結可快速跳至「九乘九文具」或「momo購物網」原商品頁面確認詳情。</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="itemsCardGrid">
+        <!-- Item Cards injected here -->
+      </div>
+    </section>
+
+    <!-- Google Sheets Integration & Formulas Guide -->
+    <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-lg">
+          田
+        </div>
+        <div>
+          <h2 class="text-base font-bold text-slate-900">如何匯入至 Google 試算表 (Google Sheets)？</h2>
+          <p class="text-xs text-slate-500">免下載檔案、免手動排版，2 種極速使用方式：</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
+        <!-- Method 1 -->
+        <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/50 flex flex-col justify-between">
+          <div>
+            <span class="inline-block px-2 py-0.5 rounded bg-emerald-600 text-white text-xs font-bold mb-2">方式 1：最推薦 (直接貼上)</span>
+            <h3 class="font-bold text-slate-800 text-sm mb-1.5">點選上方「複製到 Google 試算表」</h3>
+            <ol class="list-decimal list-inside text-slate-600 space-y-1">
+              <li>點擊右上角綠色按鈕「複製到 Google 試算表」。</li>
+              <li>打開您的 <a href="https://sheets.new" target="_blank" class="text-emerald-700 underline font-medium">Google 試算表 (空白表格)</a>。</li>
+              <li>點選 <code class="bg-white px-1.5 py-0.5 rounded border border-emerald-300 font-mono text-emerald-800">A1</code> 儲存格，按鍵盤 <kbd class="px-1.5 py-0.5 bg-slate-200 rounded font-mono text-xs text-slate-800">Ctrl + V</kbd> (Mac 為 <kbd class="px-1.5 py-0.5 bg-slate-200 rounded font-mono text-xs text-slate-800">Cmd + V</kbd>)。</li>
+              <li>包含表頭、品名、單價、各同仁數量與試算表公式（`SUM`、`SUMPRODUCT`）即刻全部完成！</li>
+            </ol>
+          </div>
+          <button onclick="copyForGoogleSheets()" class="mt-4 w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium text-xs shadow-sm transition">
+            立即複製 Google 試算表格式
+          </button>
+        </div>
+
+        <!-- Method 2 -->
+        <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/70 flex flex-col justify-between">
+          <div>
+            <span class="inline-block px-2 py-0.5 rounded bg-slate-700 text-white text-xs font-bold mb-2">方式 2：匯入 CSV 檔</span>
+            <h3 class="font-bold text-slate-800 text-sm mb-1.5">透過「匯出 CSV」建立獨立檔案</h3>
+            <ol class="list-decimal list-inside text-slate-600 space-y-1">
+              <li>點選上方「匯出 CSV」將檔案儲存至電腦。</li>
+              <li>在 Google 試算表中點選「檔案」>「匯入」>「上傳」。</li>
+              <li>分隔符號類型選擇「偵測」或「逗號」，即可完美匯入繁體中文內容（UTF-8 含 BOM，絕無亂碼）。</li>
+            </ol>
+            <div class="mt-3 p-2 bg-white rounded border border-slate-200 text-xs text-slate-500 font-mono">
+              💡 公式提示：試算表已預先綁定 <code class="text-indigo-600">=SUM(C4:J4)</code> 與單價加權相乘計算，填寫數量會自動重新加總。
+            </div>
+          </div>
+          <button onclick="exportCSV()" class="mt-4 w-full py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg font-medium text-xs shadow-sm transition">
+            立即下載 .CSV 檔案
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div id="toastIcon" class="text-emerald-400">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+      </svg>
+    </div>
+    <span id="toastMsg" class="text-sm font-medium">複製成功！</span>
+  </div>
+
+  <script>
+    // 8 Items extracted from the user's document
+    const itemsData = [
+      {
+        id: 1,
+        shortName: "樹德桌上型資料櫃",
+        fullName: "SHUTER 樹德桌上型資料櫃 DD-1214",
+        price: 890,
+        unit: "個",
+        source: "九乘九購物網",
+        badge: "資料收納",
+        url: "https://www.9x9.tw/mod/product/index.php?REQUEST_ID=55a65ce32a0f9d7015e5755b7e11e3b5f96d3dec8a4ec1e16a4234d3dd4dac0c",
+        note: "高質感多層抽屜，文件分類整理必備"
+      },
+      {
+        id: 2,
+        shortName: "歌德雜誌架",
+        fullName: "佳斯捷系列 君展歌德雜誌架-4色隨機出貨 8617",
+        price: 140,
+        unit: "個",
+        source: "九乘九購物網",
+        badge: "桌面收納",
+        url: "https://www.9x9.tw/mod/product/index.php?REQUEST_ID=55a65ce32a0f9d7015e5755b7e11e3b5dd080794c0467425052abd1e56eaa4a9",
+        note: "4色隨機出貨，圓孔通風造型"
+      },
+      {
+        id: 3,
+        shortName: "黑珍珠雜誌架",
+        fullName: "佳斯捷系列 君展黑珍珠雜誌架 8139",
+        price: 105,
+        unit: "個",
+        source: "九乘九購物網",
+        badge: "桌面收納",
+        url: "https://www.9x9.tw/mod/product/index.php?REQUEST_ID=55a65ce32a0f9d7015e5755b7e11e3b5bb0bf14b9022581b6c1c6eb6d53e4869",
+        note: "經典斜紋鏤空黑款，厚實穩固"
+      },
+      {
+        id: 4,
+        shortName: "莫蘭迪板夾(10入)",
+        fullName: "莫蘭迪色A4板夾10入組",
+        price: 350,
+        unit: "組 (10入)",
+        source: "momo購物網",
+        badge: "辦公文具",
+        url: "https://www.momoshop.com.tw/product/14818176?Area=search&mdiv=403&oid=1_4&cid=index&kw=%E6%96%87%E4%BB%B6%E5%A4%BE%E6%9D%BF&ecTagNos=",
+        note: "一組10個，淡雅莫蘭迪色系金屬夾板"
+      },
+      {
+        id: 5,
+        shortName: "L型標示架(直)A4",
+        fullName: "L型標示架(直)A4 47401",
+        price: 150,
+        unit: "個",
+        source: "九乘九購物網",
+        badge: "展示標示",
+        url: "https://www.9x9.tw/mod/product/index.php?REQUEST_ID=55a65ce32a0f9d7015e5755b7e11e3b5dc28366c8d0f6be70c678dec2e3d65e173e9f32a95f91e9dc19afd84fe08e583",
+        note: "透明壓克力高透光，前台或告示使用"
+      },
+      {
+        id: 6,
+        shortName: "伸縮學習指揮棒",
+        fullName: "伸縮學習指揮棒 (手勢造型)",
+        price: 30,
+        unit: "支",
+        source: "九乘九購物網",
+        badge: "教學會議",
+        url: "https://www.9x9.tw/mod/product/index.php?REQUEST_ID=55a65ce32a0f9d7015e5755b7e11e3b51386c94613ba501c74b18c4dd41ce7b1934ccc8206b48f2166b52da15507e438#prettyPhoto",
+        note: "教學、投影簡報指示手勢伸縮棒"
+      },
+      {
+        id: 7,
+        shortName: "A3護貝膠膜(100張)",
+        fullName: "MBS 萬事捷亮面護貝膠膜/80μ/1332(A3 100張/盒)",
+        price: 646,
+        unit: "盒 (100張)",
+        source: "momo購物網",
+        badge: "護貝耗材",
+        url: "https://www.momoshop.com.tw/product/12469938?Area=search&mdiv=403&oid=1_14&cid=index&kw=%E8%AD%B7%E8%B2%9D%E8%86%A0%E8%86%9C&ecTagNos=",
+        note: "A3 規格 / 厚度 80μ / 100張一盒"
+      },
+      {
+        id: 8,
+        shortName: "A4護貝膜(3盒組)",
+        fullName: "MBS 萬事捷A4 亮面 護貝膠膜 100張 X3盒 1330",
+        price: 636,
+        unit: "組 (3盒共300張)",
+        source: "momo購物網",
+        badge: "護貝耗材",
+        url: "https://www.momoshop.com.tw/TP/TP0000234/goodsDetail/TP00002340004235",
+        note: "A4 規格 / 3盒量販特惠組"
+      }
+    ];
+
+    // Default roster with realistic placeholder data to get started
+    let people = [
+      { id: 'p1', name: '王小美 (行政)', quantities: { 1: 1, 2: 2, 3: 0, 4: 1, 5: 2, 6: 1, 7: 0, 8: 1 } },
+      { id: 'p2', name: '陳專員 (教學組)', quantities: { 1: 0, 2: 1, 3: 1, 4: 0, 5: 1, 6: 3, 7: 1, 8: 1 } },
+      { id: 'p3', name: '林主任 (總務)', quantities: { 1: 1, 2: 0, 3: 2, 4: 1, 5: 0, 6: 0, 7: 1, 8: 1 } }
+    ];
+
+    function calculatePersonStats(person) {
+      let totalQty = 0;
+      let totalAmt = 0;
+      itemsData.forEach(item => {
+        const qty = parseInt(person.quantities[item.id] || 0, 10);
+        totalQty += qty;
+        totalAmt += qty * item.price;
+      });
+      return { totalQty, totalAmt };
+    }
+
+    function calculateItemTotals() {
+      const totals = {};
+      itemsData.forEach(item => {
+        totals[item.id] = { qty: 0, subtotal: 0 };
+      });
+
+      people.forEach(p => {
+        itemsData.forEach(item => {
+          const q = parseInt(p.quantities[item.id] || 0, 10);
+          totals[item.id].qty += q;
+          totals[item.id].subtotal += q * item.price;
+        });
+      });
+
+      return totals;
+    }
+
+    function renderMatrixTable() {
+      const tbody = document.getElementById('matrixBody');
+      const tfoot = document.getElementById('matrixFoot');
+      tbody.innerHTML = '';
+
+      if (people.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="13" class="p-8 text-center text-slate-400">
+              目前尚未加入登記人員，請在上方輸入姓名後點選「新增人員」開始統計。
+            </td>
+          </tr>
+        `;
+      }
+
+      let grandTotalQty = 0;
+      let grandTotalAmt = 0;
+
+      people.forEach((person, index) => {
+        const { totalQty, totalAmt } = calculatePersonStats(person);
+        grandTotalQty += totalQty;
+        grandTotalAmt += totalAmt;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/70 transition-colors";
+
+        let cellsHtml = `
+          <td class="p-3 text-center text-xs text-slate-400 font-mono sticky left-0 bg-white z-10">${index + 1}</td>
+          <td class="p-3 font-medium text-slate-800 sticky left-12 bg-white z-10 shadow-[2px_0_5px_rgba(0,0,0,0.03)]">
+            <input type="text" value="${escapeHtml(person.name)}" 
+              onchange="updatePersonName('${person.id}', this.value)"
+              class="w-full bg-transparent hover:bg-slate-100 focus:bg-white border border-transparent focus:border-slate-300 rounded px-1.5 py-1 text-sm font-medium focus:ring-1 focus:ring-emerald-500 focus:outline-none transition-all">
+          </td>
+        `;
+
+        // Item quantity inputs
+        itemsData.forEach(item => {
+          const qty = person.quantities[item.id] || 0;
+          cellsHtml += `
+            <td class="p-2 text-center border-l border-slate-200">
+              <div class="inline-flex items-center justify-center gap-1">
+                <button onclick="adjustQuantity('${person.id}', ${item.id}, -1)" 
+                  class="w-6 h-6 rounded-md bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-600 flex items-center justify-center text-xs font-bold transition no-print">
+                  -
+                </button>
+                <input type="number" min="0" value="${qty}" 
+                  onchange="setQuantity('${person.id}', ${item.id}, this.value)"
+                  class="w-12 text-center font-semibold text-slate-800 border border-slate-200 rounded py-0.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                <button onclick="adjustQuantity('${person.id}', ${item.id}, 1)" 
+                  class="w-6 h-6 rounded-md bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-600 flex items-center justify-center text-xs font-bold transition no-print">
+                  +
+                </button>
+              </div>
+            </td>
+          `;
+        });
+
+        // Summary columns
+        cellsHtml += `
+          <td class="p-3 text-center border-l border-slate-300 font-bold ${totalQty > 0 ? 'text-indigo-600 bg-indigo-50/20' : 'text-slate-400'}">
+            ${totalQty}
+          </td>
+          <td class="p-3 text-right border-l border-slate-300 font-bold ${totalAmt > 0 ? 'text-emerald-700 bg-emerald-50/20' : 'text-slate-400'} font-mono">
+            $${totalAmt.toLocaleString()}
+          </td>
+          <td class="p-3 text-center border-l border-slate-200 no-print">
+            <button onclick="removePerson('${person.id}')" title="刪除此列" class="text-slate-400 hover:text-red-500 transition p-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+            </button>
+          </td>
+        `;
+
+        tr.innerHTML = cellsHtml;
+        tbody.appendChild(tr);
+      });
+
+      // Render Table Summary Foot
+      const itemTotals = calculateItemTotals();
+      let footQtyCells = '';
+      let footAmtCells = '';
+
+      itemsData.forEach(item => {
+        const itemQty = itemTotals[item.id].qty;
+        const itemAmt = itemTotals[item.id].subtotal;
+        footQtyCells += `
+          <td class="p-2.5 text-center border-l border-slate-200 text-sm font-bold text-indigo-700">
+            ${itemQty} <span class="text-[10px] text-slate-500 font-normal">${item.unit.split(' ')[0]}</span>
+          </td>
+        `;
+        footAmtCells += `
+          <td class="p-2 text-center border-l border-slate-200 text-xs font-semibold text-emerald-800 font-mono">
+            $${itemAmt.toLocaleString()}
+          </td>
+        `;
+      });
+
+      tfoot.innerHTML = `
+        <tr class="bg-indigo-50/40">
+          <td colspan="2" class="p-3 font-bold text-slate-700 text-right sticky left-0 bg-indigo-50/80 z-10 border-r border-slate-200">
+            📊 需求總數量
+          </td>
+          ${footQtyCells}
+          <td class="p-3 text-center border-l border-slate-300 font-extrabold text-indigo-700 text-base bg-indigo-100/50">
+            ${grandTotalQty}
+          </td>
+          <td class="p-3 text-right border-l border-slate-300 font-extrabold text-emerald-700 text-base font-mono bg-emerald-100/40">
+            NT$ ${grandTotalAmt.toLocaleString()}
+          </td>
+          <td class="p-3 text-center border-l border-slate-200 no-print text-xs text-slate-400">總計</td>
+        </tr>
+        <tr class="bg-emerald-50/30 text-xs">
+          <td colspan="2" class="p-2.5 font-bold text-slate-600 text-right sticky left-0 bg-emerald-50/60 z-10 border-r border-slate-200">
+            💰 品項預估小計
+          </td>
+          ${footAmtCells}
+          <td colspan="3" class="p-2 text-center border-l border-slate-300 text-slate-500 font-normal">
+            全單品項合算金額
+          </td>
+        </tr>
+      `;
+
+      // Update top header badges
+      document.getElementById('statPeopleCount').textContent = `${people.length} 人`;
+      document.getElementById('statTotalQuantity').textContent = `${grandTotalQty} 件`;
+      document.getElementById('statTotalAmount').textContent = `NT$ ${grandTotalAmt.toLocaleString()}`;
+    }
+
+    function renderItemCards() {
+      const grid = document.getElementById('itemsCardGrid');
+      grid.innerHTML = '';
+
+      itemsData.forEach(item => {
+        const card = document.createElement('div');
+        card.className = "p-4 rounded-xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition-all flex flex-col justify-between bg-white group";
+        
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${item.source.includes('九乘九') ? 'bg-amber-100 text-amber-800' : 'bg-pink-100 text-pink-800'}">
+                ${item.source}
+              </span>
+              <span class="text-xs text-slate-400 font-mono">#0${item.id}</span>
+            </div>
+
+            <h3 class="font-bold text-slate-900 text-sm group-hover:text-emerald-600 transition-colors line-clamp-2" title="${item.fullName}">
+              ${item.fullName}
+            </h3>
+
+            <p class="text-xs text-slate-500 mt-1 mb-3 line-clamp-2">
+              ${item.note}
+            </p>
+          </div>
+
+          <div class="pt-3 border-t border-slate-100 mt-2 flex items-center justify-between">
+            <div>
+              <span class="text-xs text-slate-400">參考單價</span>
+              <div class="text-base font-extrabold text-emerald-600 font-mono">
+                NT$ ${item.price.toLocaleString()}
+                <span class="text-xs font-normal text-slate-500">/${item.unit}</span>
+              </div>
+            </div>
+
+            <a href="${item.url}" target="_blank" rel="noopener noreferrer" 
+              class="inline-flex items-center gap-1 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-emerald-600 hover:text-white px-3 py-1.5 rounded-lg transition-colors">
+              商品詳情
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+            </a>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function addPerson() {
+      const input = document.getElementById('newPersonName');
+      const name = input.value.trim();
+      if (!name) {
+        showToast("請輸入同仁姓名或單位名稱", "warning");
+        return;
+      }
+
+      const newId = 'p_' + Date.now();
+      const emptyQty = {};
+      itemsData.forEach(item => { emptyQty[item.id] = 0; });
+
+      people.push({
+        id: newId,
+        name: name,
+        quantities: emptyQty
+      });
+
+      input.value = '';
+      renderMatrixTable();
+      showToast(`已新增「${name}」至登記表`);
+    }
+
+    function removePerson(id) {
+      people = people.filter(p => p.id !== id);
+      renderMatrixTable();
+      showToast("已移除該列登記資料");
+    }
+
+    function updatePersonName(id, newName) {
+      const p = people.find(item => item.id === id);
+      if (p) {
+        p.name = newName.trim() || '未命名同仁';
+        showToast("已更新名稱");
+      }
+    }
+
+    function adjustQuantity(personId, itemId, delta) {
+      const p = people.find(item => item.id === personId);
+      if (!p) return;
+      const current = parseInt(p.quantities[itemId] || 0, 10);
+      const next = Math.max(0, current + delta);
+      p.quantities[itemId] = next;
+      renderMatrixTable();
+    }
+
+    function setQuantity(personId, itemId, val) {
+      const p = people.find(item => item.id === personId);
+      if (!p) return;
+      const parsed = parseInt(val, 10);
+      p.quantities[itemId] = isNaN(parsed) || parsed < 0 ? 0 : parsed;
+      renderMatrixTable();
+    }
+
+    function generateTSVForGoogleSheets() {
+      // Constructs a TSV block that parses directly into Google Sheets with formulas
+      const rows = [];
+
+      // Row 1: Title
+      rows.push(["辦公用具團購採購統計表", "", "", "", "", "", "", "", "", "", "", ""]);
+      rows.push(["統計日期", new Date().toISOString().split('T')[0], "", "", "", "", "", "", "", "", "", ""]);
+      rows.push([]); // blank line
+
+      // Row 4: Item Headers
+      const headerRow = ["序號", "登記同仁 / 單位"];
+      itemsData.forEach(item => {
+        headerRow.push(item.fullName);
+      });
+      headerRow.push("個人總件數");
+      headerRow.push("個人應付小計 (NT$)");
+      rows.push(headerRow);
+
+      // Row 5: Price Row
+      const priceRow = ["-", "參考單價 (NT$)"];
+      itemsData.forEach(item => {
+        priceRow.push(item.price);
+      });
+      priceRow.push("-");
+      priceRow.push("-");
+      rows.push(priceRow);
+
+      // Row 6+: Participant Rows with dynamic formula
+      // Note: In Google Sheets, column C is itemsData[0], column J is itemsData[7]
+      const priceRowIndex = 5; // row index in 1-based Google Sheets is 5
+      people.forEach((person, idx) => {
+        const curSheetRow = 6 + idx;
+        const pRow = [idx + 1, person.name];
+        
+        itemsData.forEach(item => {
+          pRow.push(person.quantities[item.id] || 0);
+        });
+
+        // Sum quantity formula: =SUM(C6:J6)
+        pRow.push(`=SUM(C${curSheetRow}:J${curSheetRow})`);
+        
+        // Sum total formula using SUMPRODUCT with price row: =SUMPRODUCT(C6:J6, $C$5:$J$5)
+        pRow.push(`=SUMPRODUCT(C${curSheetRow}:J${curSheetRow}, $C$${priceRowIndex}:$J$${priceRowIndex})`);
+        rows.push(pRow);
+      });
+
+      // Total Row with column SUMs
+      const lastDataRow = 5 + people.length;
+      const totalRow = ["", "總採購數量彙總"];
+      
+      itemsData.forEach((_, colIdx) => {
+        const colLetter = String.fromCharCode(67 + colIdx); // 67 is 'C'
+        totalRow.push(`=SUM(${colLetter}6:${colLetter}${lastDataRow})`);
+      });
+
+      // Grand total pieces
+      totalRow.push(`=SUM(K6:K${lastDataRow})`);
+      // Grand total amount
+      totalRow.push(`=SUM(L6:L${lastDataRow})`);
+      rows.push(totalRow);
+
+      // Convert array of arrays to TSV text
+      return rows.map(r => r.join("\t")).join("\n");
+    }
+
+    function copyForGoogleSheets() {
+      const tsvData = generateTSVForGoogleSheets();
+
+      // Use textarea + execCommand for maximal compatibility within iframes
+      const textarea = document.createElement("textarea");
+      textarea.value = tsvData;
+      textarea.style.position = "fixed";
+      textarea.style.left = "-9999px";
+      textarea.style.top = "0";
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+
+      let success = false;
+      try {
+        success = document.execCommand('copy');
+      } catch (err) {
+        success = false;
+      }
+      document.body.removeChild(textarea);
+
+      if (success) {
+        showToast("已複製 Google 試算表格式！請至 Google Sheets 按 Ctrl+V 貼上", "success");
+      } else {
+        showToast("複製失敗，請手動匯出 CSV 檔", "warning");
+      }
+    }
+
+    function exportCSV() {
+      const rows = [];
+      rows.push(["辦公用具團購採購統計表"]);
+      rows.push(["匯出時間", new Date().toLocaleString()]);
+      rows.push([]);
+
+      // Headers
+      const headerRow = ["序號", "同仁名稱"];
+      itemsData.forEach(item => {
+        headerRow.push(`"${item.fullName.replace(/"/g, '""')} (${item.price}元)"`);
+      });
+      headerRow.push("個人總件數");
+      headerRow.push("個人應付金額");
+      rows.push(headerRow);
+
+      // Data Rows
+      people.forEach((p, idx) => {
+        const { totalQty, totalAmt } = calculatePersonStats(p);
+        const row = [idx + 1, `"${p.name.replace(/"/g, '""')}"`];
+        itemsData.forEach(item => {
+          row.push(p.quantities[item.id] || 0);
+        });
+        row.push(totalQty);
+        row.push(totalAmt);
+        rows.push(row);
+      });
+
+      // Summary Row
+      const itemTotals = calculateItemTotals();
+      let grandQty = 0;
+      let grandAmt = 0;
+      people.forEach(p => {
+        const s = calculatePersonStats(p);
+        grandQty += s.totalQty;
+        grandAmt += s.totalAmt;
+      });
+
+      const summaryRow = ["總計", "全體彙總"];
+      itemsData.forEach(item => {
+        summaryRow.push(itemTotals[item.id].qty);
+      });
+      summaryRow.push(grandQty);
+      summaryRow.push(grandAmt);
+      rows.push(summaryRow);
+
+      // Add Purchase Links Reference at the bottom of the CSV
+      rows.push([]);
+      rows.push(["--- 參考採購商品網址清單 ---"]);
+      rows.push(["品項編號", "品項名稱", "參考單價", "購買通路", "商品連結網址"]);
+      itemsData.forEach(item => {
+        rows.push([item.id, `"${item.fullName}"`, item.price, item.source, `"${item.url}"`]);
+      });
+
+      const csvContent = "\uFEFF" + rows.map(e => e.join(",")).join("\n");
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `辦公用品採購統計表_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      showToast("已成功下載 CSV 試算表檔案！");
+    }
+
+    function showToast(message, type = "success") {
+      const toast = document.getElementById('toast');
+      const msg = document.getElementById('toastMsg');
+      const icon = document.getElementById('toastIcon');
+
+      msg.textContent = message;
+      if (type === "warning") {
+        icon.className = "text-amber-400";
+        icon.innerHTML = `
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+          </svg>
+        `;
+      } else {
+        icon.className = "text-emerald-400";
+        icon.innerHTML = `
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        `;
+      }
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3200);
+    }
+
+    function escapeHtml(string) {
+      return String(string).replace(/[&<>"']/g, function (s) {
+        return {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        }[s];
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderMatrixTable();
+      renderItemCards();
+    });
+  </script>
+</body>
+</html>
