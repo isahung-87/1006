@@ -45,9 +45,15 @@
     <header class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 transition-all">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold mb-2">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            辦公室用品採購專案
+          <div class="flex items-center gap-2 mb-2 flex-wrap">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              辦公室用品採購專案
+            </div>
+            <div id="cloudStatus" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-xs transition-colors">
+              <span class="w-1.5 h-1.5 rounded-full bg-slate-400" id="cloudStatusDot"></span>
+              <span id="cloudStatusText">載入雲端資料中...</span>
+            </div>
           </div>
           <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
             辦公用品統計與採購試算表
@@ -71,6 +77,13 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
             </svg>
             匯出 CSV
+          </button>
+
+          <button onclick="openResetModal()" class="inline-flex items-center gap-1.5 bg-white hover:bg-red-50 text-slate-600 hover:text-red-600 border border-slate-300 hover:border-red-200 px-3 py-2.5 rounded-xl font-medium text-xs shadow-sm transition-all focus:outline-none" title="重設表格為範例資料">
+            <svg class="w-4 h-4 text-slate-400 group-hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            重設表格
           </button>
 
           <button onclick="window.print()" class="inline-flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-3.5 py-2.5 rounded-xl font-medium text-sm shadow-sm transition-all focus:outline-none">
@@ -186,23 +199,6 @@
       </div>
     </section>
 
-    <!-- Detailed Items & Procurement Checklist -->
-    <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-slate-200 gap-2">
-        <div>
-          <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <span>採購品項清單與規格連結</span>
-            <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-normal">8 樣品項核對</span>
-          </h2>
-          <p class="text-xs text-slate-500 mt-0.5">點擊外部連結可快速跳至「九乘九文具」或「momo購物網」原商品頁面確認詳情。</p>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="itemsCardGrid">
-        <!-- Item Cards injected here -->
-      </div>
-    </section>
-
     <!-- Google Sheets Integration & Formulas Guide -->
     <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
       <div class="flex items-center gap-3 mb-4">
@@ -255,6 +251,29 @@
     </section>
   </div>
 
+  <!-- Reset Confirmation Modal (Replaces browser confirm) -->
+  <div id="resetModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 transform transition-all">
+      <div class="w-12 h-12 rounded-xl bg-red-100 text-red-600 flex items-center justify-center mb-4">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+        </svg>
+      </div>
+      <h3 class="text-lg font-bold text-slate-900">確定要重設試算表資料？</h3>
+      <p class="text-xs text-slate-500 mt-2">
+        此操作將清空目前登記的自訂數量，並還原為初始範例名單。雲端上的儲存記錄也會同步重設。
+      </p>
+      <div class="mt-6 flex items-center justify-end gap-3">
+        <button onclick="closeResetModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition">
+          取消
+        </button>
+        <button onclick="confirmResetData()" class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition shadow-sm">
+          確認重設
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification -->
   <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
     <div id="toastIcon" class="text-emerald-400">
@@ -265,100 +284,79 @@
     <span id="toastMsg" class="text-sm font-medium">複製成功！</span>
   </div>
 
-  <script>
-    // 8 Items extracted from the user's document
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
     const itemsData = [
       {
         id: 1,
         shortName: "樹德桌上型資料櫃",
         fullName: "SHUTER 樹德桌上型資料櫃 DD-1214",
         price: 890,
-        unit: "個",
-        source: "九乘九購物網",
-        badge: "資料收納",
-        url: "https://www.9x9.tw/mod/product/index.php?REQUEST_ID=55a65ce32a0f9d7015e5755b7e11e3b5f96d3dec8a4ec1e16a4234d3dd4dac0c",
-        note: "高質感多層抽屜，文件分類整理必備"
+        unit: "個"
       },
       {
         id: 2,
         shortName: "歌德雜誌架",
         fullName: "佳斯捷系列 君展歌德雜誌架-4色隨機出貨 8617",
         price: 140,
-        unit: "個",
-        source: "九乘九購物網",
-        badge: "桌面收納",
-        url: "https://www.9x9.tw/mod/product/index.php?REQUEST_ID=55a65ce32a0f9d7015e5755b7e11e3b5dd080794c0467425052abd1e56eaa4a9",
-        note: "4色隨機出貨，圓孔通風造型"
+        unit: "個"
       },
       {
         id: 3,
         shortName: "黑珍珠雜誌架",
         fullName: "佳斯捷系列 君展黑珍珠雜誌架 8139",
         price: 105,
-        unit: "個",
-        source: "九乘九購物網",
-        badge: "桌面收納",
-        url: "https://www.9x9.tw/mod/product/index.php?REQUEST_ID=55a65ce32a0f9d7015e5755b7e11e3b5bb0bf14b9022581b6c1c6eb6d53e4869",
-        note: "經典斜紋鏤空黑款，厚實穩固"
+        unit: "個"
       },
       {
         id: 4,
         shortName: "莫蘭迪板夾(10入)",
         fullName: "莫蘭迪色A4板夾10入組",
         price: 350,
-        unit: "組 (10入)",
-        source: "momo購物網",
-        badge: "辦公文具",
-        url: "https://www.momoshop.com.tw/product/14818176?Area=search&mdiv=403&oid=1_4&cid=index&kw=%E6%96%87%E4%BB%B6%E5%A4%BE%E6%9D%BF&ecTagNos=",
-        note: "一組10個，淡雅莫蘭迪色系金屬夾板"
+        unit: "組 (10入)"
       },
       {
         id: 5,
         shortName: "L型標示架(直)A4",
         fullName: "L型標示架(直)A4 47401",
         price: 150,
-        unit: "個",
-        source: "九乘九購物網",
-        badge: "展示標示",
-        url: "https://www.9x9.tw/mod/product/index.php?REQUEST_ID=55a65ce32a0f9d7015e5755b7e11e3b5dc28366c8d0f6be70c678dec2e3d65e173e9f32a95f91e9dc19afd84fe08e583",
-        note: "透明壓克力高透光，前台或告示使用"
+        unit: "個"
       },
       {
         id: 6,
         shortName: "伸縮學習指揮棒",
         fullName: "伸縮學習指揮棒 (手勢造型)",
         price: 30,
-        unit: "支",
-        source: "九乘九購物網",
-        badge: "教學會議",
-        url: "https://www.9x9.tw/mod/product/index.php?REQUEST_ID=55a65ce32a0f9d7015e5755b7e11e3b51386c94613ba501c74b18c4dd41ce7b1934ccc8206b48f2166b52da15507e438#prettyPhoto",
-        note: "教學、投影簡報指示手勢伸縮棒"
+        unit: "支"
       },
       {
         id: 7,
         shortName: "A3護貝膠膜(100張)",
         fullName: "MBS 萬事捷亮面護貝膠膜/80μ/1332(A3 100張/盒)",
         price: 646,
-        unit: "盒 (100張)",
-        source: "momo購物網",
-        badge: "護貝耗材",
-        url: "https://www.momoshop.com.tw/product/12469938?Area=search&mdiv=403&oid=1_14&cid=index&kw=%E8%AD%B7%E8%B2%9D%E8%86%A0%E8%86%9C&ecTagNos=",
-        note: "A3 規格 / 厚度 80μ / 100張一盒"
+        unit: "盒 (100張)"
       },
       {
         id: 8,
         shortName: "A4護貝膜(3盒組)",
         fullName: "MBS 萬事捷A4 亮面 護貝膠膜 100張 X3盒 1330",
         price: 636,
-        unit: "組 (3盒共300張)",
-        source: "momo購物網",
-        badge: "護貝耗材",
-        url: "https://www.momoshop.com.tw/TP/TP0000234/goodsDetail/TP00002340004235",
-        note: "A4 規格 / 3盒量販特惠組"
+        unit: "組 (3盒共300張)"
       }
     ];
 
-    // Default roster with realistic placeholder data to get started
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'procurement-app';
+    let db = null;
+    let auth = null;
+    let currentUser = null;
+    let rosterDocRef = null;
+    let isSaving = false;
+    let saveTimeout = null;
+
+    // Default template data for first-time use
     let people = [
       { id: 'p1', name: '王小美 (行政)', quantities: { 1: 1, 2: 2, 3: 0, 4: 1, 5: 2, 6: 1, 7: 0, 8: 1 } },
       { id: 'p2', name: '陳專員 (教學組)', quantities: { 1: 0, 2: 1, 3: 1, 4: 0, 5: 1, 6: 3, 7: 1, 8: 1 } },
@@ -423,25 +421,24 @@
           <td class="p-3 text-center text-xs text-slate-400 font-mono sticky left-0 bg-white z-10">${index + 1}</td>
           <td class="p-3 font-medium text-slate-800 sticky left-12 bg-white z-10 shadow-[2px_0_5px_rgba(0,0,0,0.03)]">
             <input type="text" value="${escapeHtml(person.name)}" 
-              onchange="updatePersonName('${person.id}', this.value)"
+              onchange="window.updatePersonName('${person.id}', this.value)"
               class="w-full bg-transparent hover:bg-slate-100 focus:bg-white border border-transparent focus:border-slate-300 rounded px-1.5 py-1 text-sm font-medium focus:ring-1 focus:ring-emerald-500 focus:outline-none transition-all">
           </td>
         `;
 
-        // Item quantity inputs
         itemsData.forEach(item => {
           const qty = person.quantities[item.id] || 0;
           cellsHtml += `
             <td class="p-2 text-center border-l border-slate-200">
               <div class="inline-flex items-center justify-center gap-1">
-                <button onclick="adjustQuantity('${person.id}', ${item.id}, -1)" 
+                <button onclick="window.adjustQuantity('${person.id}', ${item.id}, -1)" 
                   class="w-6 h-6 rounded-md bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-600 flex items-center justify-center text-xs font-bold transition no-print">
                   -
                 </button>
                 <input type="number" min="0" value="${qty}" 
-                  onchange="setQuantity('${person.id}', ${item.id}, this.value)"
+                  onchange="window.setQuantity('${person.id}', ${item.id}, this.value)"
                   class="w-12 text-center font-semibold text-slate-800 border border-slate-200 rounded py-0.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-                <button onclick="adjustQuantity('${person.id}', ${item.id}, 1)" 
+                <button onclick="window.adjustQuantity('${person.id}', ${item.id}, 1)" 
                   class="w-6 h-6 rounded-md bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-600 flex items-center justify-center text-xs font-bold transition no-print">
                   +
                 </button>
@@ -450,7 +447,6 @@
           `;
         });
 
-        // Summary columns
         cellsHtml += `
           <td class="p-3 text-center border-l border-slate-300 font-bold ${totalQty > 0 ? 'text-indigo-600 bg-indigo-50/20' : 'text-slate-400'}">
             ${totalQty}
@@ -459,7 +455,7 @@
             $${totalAmt.toLocaleString()}
           </td>
           <td class="p-3 text-center border-l border-slate-200 no-print">
-            <button onclick="removePerson('${person.id}')" title="刪除此列" class="text-slate-400 hover:text-red-500 transition p-1">
+            <button onclick="window.removePerson('${person.id}')" title="刪除此列" class="text-slate-400 hover:text-red-500 transition p-1">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
               </svg>
@@ -471,7 +467,6 @@
         tbody.appendChild(tr);
       });
 
-      // Render Table Summary Foot
       const itemTotals = calculateItemTotals();
       let footQtyCells = '';
       let footAmtCells = '';
@@ -516,61 +511,49 @@
         </tr>
       `;
 
-      // Update top header badges
       document.getElementById('statPeopleCount').textContent = `${people.length} 人`;
       document.getElementById('statTotalQuantity').textContent = `${grandTotalQty} 件`;
       document.getElementById('statTotalAmount').textContent = `NT$ ${grandTotalAmt.toLocaleString()}`;
     }
 
-    function renderItemCards() {
-      const grid = document.getElementById('itemsCardGrid');
-      grid.innerHTML = '';
+    function setCloudStatus(status, text) {
+      const dot = document.getElementById('cloudStatusDot');
+      const label = document.getElementById('cloudStatusText');
+      if (!dot || !label) return;
 
-      itemsData.forEach(item => {
-        const card = document.createElement('div');
-        card.className = "p-4 rounded-xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition-all flex flex-col justify-between bg-white group";
-        
-        card.innerHTML = `
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${item.source.includes('九乘九') ? 'bg-amber-100 text-amber-800' : 'bg-pink-100 text-pink-800'}">
-                ${item.source}
-              </span>
-              <span class="text-xs text-slate-400 font-mono">#0${item.id}</span>
-            </div>
-
-            <h3 class="font-bold text-slate-900 text-sm group-hover:text-emerald-600 transition-colors line-clamp-2" title="${item.fullName}">
-              ${item.fullName}
-            </h3>
-
-            <p class="text-xs text-slate-500 mt-1 mb-3 line-clamp-2">
-              ${item.note}
-            </p>
-          </div>
-
-          <div class="pt-3 border-t border-slate-100 mt-2 flex items-center justify-between">
-            <div>
-              <span class="text-xs text-slate-400">參考單價</span>
-              <div class="text-base font-extrabold text-emerald-600 font-mono">
-                NT$ ${item.price.toLocaleString()}
-                <span class="text-xs font-normal text-slate-500">/${item.unit}</span>
-              </div>
-            </div>
-
-            <a href="${item.url}" target="_blank" rel="noopener noreferrer" 
-              class="inline-flex items-center gap-1 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-emerald-600 hover:text-white px-3 py-1.5 rounded-lg transition-colors">
-              商品詳情
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-              </svg>
-            </a>
-          </div>
-        `;
-        grid.appendChild(card);
-      });
+      label.textContent = text;
+      if (status === 'saving') {
+        dot.className = "w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping";
+      } else if (status === 'saved') {
+        dot.className = "w-1.5 h-1.5 rounded-full bg-emerald-500";
+      } else if (status === 'error') {
+        dot.className = "w-1.5 h-1.5 rounded-full bg-red-500";
+      }
     }
 
-    function addPerson() {
+    async function triggerCloudSave() {
+      if (!currentUser || !db || !rosterDocRef) return;
+      setCloudStatus('saving', '自動儲存中...');
+      if (saveTimeout) clearTimeout(saveTimeout);
+
+      saveTimeout = setTimeout(async () => {
+        try {
+          isSaving = true;
+          await setDoc(rosterDocRef, {
+            peopleJson: JSON.stringify(people),
+            updatedAt: Date.now()
+          });
+          setCloudStatus('saved', '雲端已同步');
+        } catch (err) {
+          console.error("Cloud save error:", err);
+          setCloudStatus('error', '儲存失敗');
+        } finally {
+          isSaving = false;
+        }
+      }, 500);
+    }
+
+    window.addPerson = function() {
       const input = document.getElementById('newPersonName');
       const name = input.value.trim();
       if (!name) {
@@ -590,50 +573,50 @@
 
       input.value = '';
       renderMatrixTable();
+      triggerCloudSave();
       showToast(`已新增「${name}」至登記表`);
-    }
+    };
 
-    function removePerson(id) {
+    window.removePerson = function(id) {
       people = people.filter(p => p.id !== id);
       renderMatrixTable();
+      triggerCloudSave();
       showToast("已移除該列登記資料");
-    }
+    };
 
-    function updatePersonName(id, newName) {
+    window.updatePersonName = function(id, newName) {
       const p = people.find(item => item.id === id);
       if (p) {
         p.name = newName.trim() || '未命名同仁';
-        showToast("已更新名稱");
+        triggerCloudSave();
       }
-    }
+    };
 
-    function adjustQuantity(personId, itemId, delta) {
+    window.adjustQuantity = function(personId, itemId, delta) {
       const p = people.find(item => item.id === personId);
       if (!p) return;
       const current = parseInt(p.quantities[itemId] || 0, 10);
       const next = Math.max(0, current + delta);
       p.quantities[itemId] = next;
       renderMatrixTable();
-    }
+      triggerCloudSave();
+    };
 
-    function setQuantity(personId, itemId, val) {
+    window.setQuantity = function(personId, itemId, val) {
       const p = people.find(item => item.id === personId);
       if (!p) return;
       const parsed = parseInt(val, 10);
       p.quantities[itemId] = isNaN(parsed) || parsed < 0 ? 0 : parsed;
       renderMatrixTable();
-    }
+      triggerCloudSave();
+    };
 
     function generateTSVForGoogleSheets() {
-      // Constructs a TSV block that parses directly into Google Sheets with formulas
       const rows = [];
-
-      // Row 1: Title
       rows.push(["辦公用具團購採購統計表", "", "", "", "", "", "", "", "", "", "", ""]);
       rows.push(["統計日期", new Date().toISOString().split('T')[0], "", "", "", "", "", "", "", "", "", ""]);
-      rows.push([]); // blank line
+      rows.push([]);
 
-      // Row 4: Item Headers
       const headerRow = ["序號", "登記同仁 / 單位"];
       itemsData.forEach(item => {
         headerRow.push(item.fullName);
@@ -642,7 +625,6 @@
       headerRow.push("個人應付小計 (NT$)");
       rows.push(headerRow);
 
-      // Row 5: Price Row
       const priceRow = ["-", "參考單價 (NT$)"];
       itemsData.forEach(item => {
         priceRow.push(item.price);
@@ -651,9 +633,7 @@
       priceRow.push("-");
       rows.push(priceRow);
 
-      // Row 6+: Participant Rows with dynamic formula
-      // Note: In Google Sheets, column C is itemsData[0], column J is itemsData[7]
-      const priceRowIndex = 5; // row index in 1-based Google Sheets is 5
+      const priceRowIndex = 5;
       people.forEach((person, idx) => {
         const curSheetRow = 6 + idx;
         const pRow = [idx + 1, person.name];
@@ -662,37 +642,28 @@
           pRow.push(person.quantities[item.id] || 0);
         });
 
-        // Sum quantity formula: =SUM(C6:J6)
         pRow.push(`=SUM(C${curSheetRow}:J${curSheetRow})`);
-        
-        // Sum total formula using SUMPRODUCT with price row: =SUMPRODUCT(C6:J6, $C$5:$J$5)
         pRow.push(`=SUMPRODUCT(C${curSheetRow}:J${curSheetRow}, $C$${priceRowIndex}:$J$${priceRowIndex})`);
         rows.push(pRow);
       });
 
-      // Total Row with column SUMs
       const lastDataRow = 5 + people.length;
       const totalRow = ["", "總採購數量彙總"];
       
       itemsData.forEach((_, colIdx) => {
-        const colLetter = String.fromCharCode(67 + colIdx); // 67 is 'C'
+        const colLetter = String.fromCharCode(67 + colIdx);
         totalRow.push(`=SUM(${colLetter}6:${colLetter}${lastDataRow})`);
       });
 
-      // Grand total pieces
       totalRow.push(`=SUM(K6:K${lastDataRow})`);
-      // Grand total amount
       totalRow.push(`=SUM(L6:L${lastDataRow})`);
       rows.push(totalRow);
 
-      // Convert array of arrays to TSV text
       return rows.map(r => r.join("\t")).join("\n");
     }
 
-    function copyForGoogleSheets() {
+    window.copyForGoogleSheets = function() {
       const tsvData = generateTSVForGoogleSheets();
-
-      // Use textarea + execCommand for maximal compatibility within iframes
       const textarea = document.createElement("textarea");
       textarea.value = tsvData;
       textarea.style.position = "fixed";
@@ -713,17 +684,16 @@
       if (success) {
         showToast("已複製 Google 試算表格式！請至 Google Sheets 按 Ctrl+V 貼上", "success");
       } else {
-        showToast("複製失敗，請手動匯出 CSV 檔", "warning");
+        showToast("複製失敗，請使用匯出 CSV 檔", "warning");
       }
-    }
+    };
 
-    function exportCSV() {
+    window.exportCSV = function() {
       const rows = [];
       rows.push(["辦公用具團購採購統計表"]);
       rows.push(["匯出時間", new Date().toLocaleString()]);
       rows.push([]);
 
-      // Headers
       const headerRow = ["序號", "同仁名稱"];
       itemsData.forEach(item => {
         headerRow.push(`"${item.fullName.replace(/"/g, '""')} (${item.price}元)"`);
@@ -732,7 +702,6 @@
       headerRow.push("個人應付金額");
       rows.push(headerRow);
 
-      // Data Rows
       people.forEach((p, idx) => {
         const { totalQty, totalAmt } = calculatePersonStats(p);
         const row = [idx + 1, `"${p.name.replace(/"/g, '""')}"`];
@@ -744,7 +713,6 @@
         rows.push(row);
       });
 
-      // Summary Row
       const itemTotals = calculateItemTotals();
       let grandQty = 0;
       let grandAmt = 0;
@@ -762,14 +730,6 @@
       summaryRow.push(grandAmt);
       rows.push(summaryRow);
 
-      // Add Purchase Links Reference at the bottom of the CSV
-      rows.push([]);
-      rows.push(["--- 參考採購商品網址清單 ---"]);
-      rows.push(["品項編號", "品項名稱", "參考單價", "購買通路", "商品連結網址"]);
-      itemsData.forEach(item => {
-        rows.push([item.id, `"${item.fullName}"`, item.price, item.source, `"${item.url}"`]);
-      });
-
       const csvContent = "\uFEFF" + rows.map(e => e.join(",")).join("\n");
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -782,7 +742,7 @@
       URL.revokeObjectURL(url);
 
       showToast("已成功下載 CSV 試算表檔案！");
-    }
+    };
 
     function showToast(message, type = "success") {
       const toast = document.getElementById('toast');
@@ -827,10 +787,56 @@
       });
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
+    async function initApp() {
       renderMatrixTable();
-      renderItemCards();
-    });
+
+      try {
+        if (typeof __firebase_config !== 'undefined') {
+          const firebaseConfig = JSON.parse(__firebase_config);
+          const app = initializeApp(firebaseConfig);
+          auth = getAuth(app);
+          db = getFirestore(app);
+
+          if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+            await signInWithCustomToken(auth, __initial_auth_token);
+          } else {
+            await signInAnonymously(auth);
+          }
+
+          currentUser = auth.currentUser;
+          if (currentUser) {
+            rosterDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'procurement_roster');
+
+            onSnapshot(rosterDocRef, (docSnap) => {
+              if (docSnap.exists()) {
+                const data = docSnap.data();
+                if (data.peopleJson && !isSaving) {
+                  try {
+                    people = JSON.parse(data.peopleJson);
+                    renderMatrixTable();
+                    setCloudStatus('saved', '已自動儲存至雲端');
+                  } catch (e) {
+                    console.error("JSON parse error:", e);
+                  }
+                }
+              } else {
+                setCloudStatus('saved', '雲端已就緒');
+              }
+            }, (error) => {
+              console.error("Firestore onSnapshot error:", error);
+              setCloudStatus('error', '連線中斷');
+            });
+          }
+        } else {
+          setCloudStatus('saved', '離線本地模式');
+        }
+      } catch (err) {
+        console.warn("Storage initialization notice:", err);
+        setCloudStatus('saved', '離線模式');
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', initApp);
   </script>
 </body>
 </html>
